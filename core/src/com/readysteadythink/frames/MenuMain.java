@@ -1,8 +1,6 @@
 package com.readysteadythink.frames;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -26,10 +24,10 @@ public class MenuMain extends BaseFrame {
     private IUIElement exit;
 
     //Sprites
-    private Sprite menuTitleSprite = new Sprite(new Texture("menu/title.png"));
-    private Sprite buttonPlaySprite = new Sprite(new Texture("menu/play.png"));
-    private Sprite buttonOptionsSprite = new Sprite(new Texture("menu/options.png"));
-    private Sprite buttonExitSprite = new Sprite(new Texture("menu/exit.png"));
+    private Sprite menuTitleSprite = new Sprite(new Texture("Menu/title.png"));
+    private Sprite buttonPlaySprite = new Sprite(new Texture("Menu/play.png"));
+    private Sprite buttonOptionsSprite = new Sprite(new Texture("Menu/options.png"));
+    private Sprite buttonExitSprite = new Sprite(new Texture("Menu/exit.png"));
 
     public MenuMain() {
         super();
@@ -54,8 +52,8 @@ public class MenuMain extends BaseFrame {
 
         title = new BaseUIElement("title", menuTitleSprite, menuTitlePos.x, menuTitlePos.y);
         play = new BaseUIElement("play", buttonPlaySprite, buttonPlayPos.x, buttonPlayPos.y);
-        options = new BaseUIElement("play", buttonOptionsSprite, buttonOptionsPos.x, buttonOptionsPos.y);
-        exit = new BaseUIElement("play", buttonExitSprite, buttonExitPos.x, buttonExitPos.y);
+        options = new BaseUIElement("options", buttonOptionsSprite, buttonOptionsPos.x, buttonOptionsPos.y);
+        exit = new BaseUIElement("exit", buttonExitSprite, buttonExitPos.x, buttonExitPos.y);
 
         manager.add(title);
         manager.add(play);
@@ -66,8 +64,7 @@ public class MenuMain extends BaseFrame {
     @Override
     public void init() {
         super.init();
-        /*Music music = Gdx.audio.newMusic(Gdx.files.internal("music/main.ogg"));
-        Global.changeMusic(music);*/
+        Global.changeMusic(Gdx.audio.newMusic(Gdx.files.internal("Menu/Chris Rae - Liquid Latin.mp3")));
     }
 
     @Override
@@ -94,9 +91,10 @@ public class MenuMain extends BaseFrame {
         String hit = manager.firstHit(pos.x, pos.y);
         if (hit != null) {
             Gdx.app.log("Log", hit);
-            if (hit == "play") {
+            if (hit == "play")
                 next = new FlashNumbers();
-            }
+            else if (hit == "exit")
+                Gdx.app.exit();
         }
         return true;
     }

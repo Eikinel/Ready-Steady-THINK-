@@ -1,10 +1,13 @@
 package com.readysteadythink.frames;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -12,9 +15,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.readysteadythink.Global;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
@@ -22,18 +25,30 @@ import java.util.Random;
 public class FlashNumbers extends BaseFrame {
 
     //Game variables
-    private boolean flash = true;
     private long gameClock = TimeUtils.millis();
-    private long startFlash;
-    private float flashDuration = 1000f;
-    private float waitBetweenGame = 1000f;
     private int SQUARE_MIN = 4;
     private int MAX_SQUARE_PER_LINE = 4;
     private int MAX_SQUARE_PER_COLUMN = 5;
+    private int squareNumbers = SQUARE_MIN;
+    private boolean win = false;
+    private boolean flash = true;
+    private boolean wait = false;
+    private long startFlash;
+    private long startWait;
+    private float flashDuration;
+    private float waitDuration = 1000f;
     private boolean check = false;
+    private int lastClicked;
+
+    //Sprites
+    private Sprite O = new Sprite(new Texture("FlashNumbers/O.png"));
+    private Sprite X = new Sprite(new Texture("FlashNumbers/X.png"));
+    private boolean blink = false;
+    private float blinkEnd = waitDuration / 2.5f;
+    private float blinkInterval = blinkEnd / 4.f;
 
     //Text
-    private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Cabin-Bold.ttf"));
+    private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Shared/Fonts/Cabin-Bold.ttf"));
     private FreeTypeFontParameter parameter = new FreeTypeFontParameter();
     private BitmapFont fontLarge;
     private BitmapFont fontSmall;
@@ -46,14 +61,20 @@ public class FlashNumbers extends BaseFrame {
     private ShapeRenderer square = new ShapeRenderer();
     private float squareSize = screenw / 8.f;
     private float borderWidth = screenw / 12.f;
-    private int squareNumbers = SQUARE_MIN;
     private List<Integer> squareIndexes = new ArrayList<Integer>();
     private List<Vector2> squarePos = new ArrayList<Vector2>();
     private List<Boolean> squareFlipped = new ArrayList<Boolean>();
     private Vector2 min, max, spaceWidth; //Boundaries for squares
 
+    //Sound
+    private Sound success = Gdx.audio.newSound(Gdx.files.internal("FlashNumbers/success.mp3"));
+    private Sound fail = Gdx.audio.newSound(Gdx.files.internal("FlashNumbers/fail.mp3"));
+
 
     public FlashNumbers() {
+        X.setScale(squareSize / X.getWidth());
+        O.setScale((screenw / O.getWidth()) * 0.75f);
+
         parameter.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!'()>?:, ";
 
         parameter.size = (int)(screenw / 8);
@@ -63,6 +84,10 @@ public class FlashNumbers extends BaseFrame {
         titlePos = new Vector2(
                 screenw / 2 - layout.width / 2,
                 screenh - layout.height - screenh * 0.05f);
+        O.setPosition(
+                screenw / 2.f - O.getWidth() / 2.f,
+                screenh / 2.f - O.getHeight() / 2.f - (screenh - titlePos.y) / 2.f
+        );
 
         parameter.size = (int)(screenw / 12);
         fontSmall = generator.generateFont(parameter);
@@ -83,7 +108,34 @@ public class FlashNumbers extends BaseFrame {
         InitSquares();
     }
 
+    @Override
+    public void init() {
+        super.init();
+        Global.setFade("out", 3.f);
+        Gdx.app.log("Debug", "Initializing fade out");
+    }
+
     public IFrame update(float dt) {
+        if (Global.isFading())
+            Global.fade(dt);
+
+        if (wait) {
+            long timeSinceWait = TimeUtils.timeSinceMillis(startWait);
+
+            if (timeSinceWait >= waitDuration) {
+                wait = false;
+                restart();
+            }
+            else if (timeSinceWait < blinkEnd) {
+                if (timeSinceWait % (blinkInterval * 2) < blinkInterval)
+                    blink = false;
+                else
+                    blink = true;
+            }
+            else
+                blink = false;
+        }
+
         if (flash && TimeUtils.timeSinceMillis(startFlash) >= flashDuration) {
             Gdx.app.log("Debug", "Stop flash at time " + Long.toString(TimeUtils.timeSinceMillis(gameClock)));
             flipAll(false);
@@ -99,12 +151,18 @@ public class FlashNumbers extends BaseFrame {
                 if (squareFlipped.get(i))
                     nbTrue++;
                 if (nbTrue == squareFlipped.size()) {
-                    restart(true);
+                    win = true;
+                    success.play();
+                    InitWait();
                     break;
                 }
                 if (previous && !squareFlipped.get(i)) {
-                    Gdx.app.log("Debug", "previous index " + Integer.toString(i + 1) + ": " + Boolean.toString(previous) + " / actual: " + Boolean.toString(squareFlipped.get(i)));
-                    restart(false);
+                    win = false;
+                    X.setPosition(
+                            squarePos.get(lastClicked).x - (X.getWidth() * X.getScaleX()) / 1.25f,
+                            squarePos.get(lastClicked).y - (X.getHeight() * X.getScaleY()) / 1.25f);
+                    fail.play();
+                    InitWait();
                     break;
                 }
                 previous = squareFlipped.get(i);
@@ -144,12 +202,18 @@ public class FlashNumbers extends BaseFrame {
                     squarePos.get(i).x + squareSize / 2 - layout.width / 2,
                     squarePos.get(i).y + squareSize - layout.height / 2);
         }
+        if (wait) {
+            if (!win)
+                X.draw(batch);
+            else if (win && !blink)
+                O.draw(batch);
+        }
         batch.end();
     }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (!flash) {
+        if (!flash && !wait) {
             Vector3 camPos = camera.unproject(new Vector3(screenX, screenY, 0));
             ListIterator<Vector2> it = squarePos.listIterator();
             int i = 0;
@@ -160,6 +224,7 @@ public class FlashNumbers extends BaseFrame {
                 if (camPos.x >= pos.x && camPos.x <= pos.x + squareSize &&
                         camPos.y >= pos.y && camPos.y <= pos.y + squareSize) {
                     Gdx.app.log("Debug", "Touched square n°" + squareIndexes.get(i));
+                    lastClicked = i;
                     squareFlipped.set(i, true);
                     check = true;
                     return true;
@@ -176,27 +241,38 @@ public class FlashNumbers extends BaseFrame {
         generator.dispose();
         fontLarge.dispose();
         fontSmall.dispose();
+        fontTiny.dispose();
         square.dispose();
+        O.getTexture().dispose();
+        X.getTexture().dispose();
     }
 
-    public void restart(boolean isWon) {
-        Gdx.app.log("Debug", "Game is " + (isWon ? "won" : "lost"));
-        if (isWon)
+    public void restart() {
+        Gdx.app.log("Debug", "Game is " + (win ? "won" : "lost"));
+        if (win)
             squareNumbers++;
-        else if (!isWon && squareNumbers > SQUARE_MIN)
+        else if (!win && squareNumbers > SQUARE_MIN)
             squareNumbers--;
 
         squareIndexes.clear();
         squarePos.clear();
         squareFlipped.clear();
         InitSquares();
-        flash = true;
+    }
+
+    public void InitWait() {
+        flipAll(true);
+        blink = false;
+        wait = true;
+        startWait = TimeUtils.millis();
     }
 
     public void InitSquares() {
         Random rand = new Random();
         List<Vector2> takenCases = new ArrayList<Vector2>();
 
+        flash = true;
+        flashDuration = 1000.f + 200.f * (squareNumbers - SQUARE_MIN);
         startFlash = TimeUtils.millis();
 
         for(int i = 1; i <= squareNumbers; i++) {
@@ -206,7 +282,7 @@ public class FlashNumbers extends BaseFrame {
                 if (randCase.equals(takenCases.get(j))) {
                     Gdx.app.log("Debug", "Same position encountered, redefinition");
                     randCase = new Vector2(rand.nextInt(MAX_SQUARE_PER_LINE), rand.nextInt(MAX_SQUARE_PER_COLUMN));
-                    j = 0;
+                    j = -1;
                 }
             }
             takenCases.add(randCase);

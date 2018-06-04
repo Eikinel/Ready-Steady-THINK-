@@ -31,9 +31,7 @@ public abstract class BaseFrame implements IFrame {
     }
 
     @Override
-    public IFrame update(float dt) {
-        return this;
-    }
+    public IFrame update(float dt) { return this; }
 
     @Override
     public void draw() {

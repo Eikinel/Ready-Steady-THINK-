@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 
-import com.readysteadythink.frames.FlashNumbers;
 import com.readysteadythink.frames.IFrame;
 import com.readysteadythink.frames.MenuMain;
 
