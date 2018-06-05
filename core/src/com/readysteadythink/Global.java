@@ -10,6 +10,10 @@ public final class Global {
     static String fadeStatus = "none";
     static float fadeDuration = 1.f;
 
+    public static String FLASH_NUMBERS = "flash_numbers";
+    public static String QUICK_MATH = "quick_math";
+    public static String IN_AND_OUT = "in_and_out";
+
     public static void changeMusic(Music newMusic) {
         if (music != null) {
             Gdx.app.log("Debug", "Music change");
@@ -26,11 +30,6 @@ public final class Global {
         music.setVolume(musicVolume);
         music.setLooping(true);
         music.play();
-
-        Gdx.app.log("Debug", "isFading: " + fading);
-        Gdx.app.log("Debug", "fadeStatus: " + fadeStatus);
-        Gdx.app.log("Debug", "Music volume: " + musicVolume);
-        Gdx.app.log("Debug", "Fade duration: " + fadeDuration);
     }
 
     public static final boolean isFading() {

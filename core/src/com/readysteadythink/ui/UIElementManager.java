@@ -59,4 +59,15 @@ public class UIElementManager {
         }
         return false;
     }
+
+    public IUIElement getElementByName(String name) {
+        ListIterator<IUIElement> itr = elements.listIterator();
+        while (itr.hasNext()) {
+            IUIElement element = itr.next();
+            if (element.getName() == name) {
+                return element;
+            }
+        }
+        return null;
+    }
 }

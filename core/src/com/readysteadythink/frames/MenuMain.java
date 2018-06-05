@@ -19,13 +19,13 @@ public class MenuMain extends BaseFrame {
     //UI Elements
     private UIElementManager manager = new UIElementManager();
     private IUIElement title;
-    private IUIElement play;
+    private IUIElement selectGame;
     private IUIElement options;
     private IUIElement exit;
 
     //Sprites
     private Sprite menuTitleSprite = new Sprite(new Texture("Menu/title.png"));
-    private Sprite buttonPlaySprite = new Sprite(new Texture("Menu/play.png"));
+    private Sprite buttonSelectGameSprite = new Sprite(new Texture("Menu/select.png"));
     private Sprite buttonOptionsSprite = new Sprite(new Texture("Menu/options.png"));
     private Sprite buttonExitSprite = new Sprite(new Texture("Menu/exit.png"));
 
@@ -33,7 +33,7 @@ public class MenuMain extends BaseFrame {
         super();
 
         menuTitleSprite.setScale((screenw / menuTitleSprite.getWidth()) * 0.8f);
-        buttonPlaySprite.setScale((screenw / buttonPlaySprite.getWidth()) * 0.75f);
+        buttonSelectGameSprite.setScale((screenw / buttonSelectGameSprite.getWidth()) * 0.75f);
         buttonOptionsSprite.setScale((screenw / buttonOptionsSprite.getWidth()) * 0.75f);
         buttonExitSprite.setScale((screenw / buttonExitSprite.getWidth()) * 0.75f);
 
@@ -41,8 +41,8 @@ public class MenuMain extends BaseFrame {
                 screenw / 2 - (menuTitleSprite.getWidth() * menuTitleSprite.getScaleX()) / 2,
                 screenh - menuTitleSprite.getHeight() * menuTitleSprite.getScaleY() - screenh * 0.1f);
         Vector2 buttonPlayPos = new Vector2(
-                screenw / 2 - (buttonPlaySprite.getWidth() * buttonPlaySprite.getScaleX()) / 2,
-                screenh * 0.5f - buttonPlaySprite.getHeight() * buttonPlaySprite.getScaleY());
+                screenw / 2 - (buttonSelectGameSprite.getWidth() * buttonSelectGameSprite.getScaleX()) / 2,
+                screenh * 0.5f - buttonSelectGameSprite.getHeight() * buttonSelectGameSprite.getScaleY());
         Vector2 buttonOptionsPos = new Vector2(
                 buttonPlayPos.x,
                 buttonPlayPos.y - buttonOptionsSprite.getHeight() * buttonOptionsSprite.getScaleY() - screenh * 0.05f);
@@ -51,12 +51,12 @@ public class MenuMain extends BaseFrame {
                 buttonOptionsPos.y - buttonExitSprite.getHeight() * buttonExitSprite.getScaleY() - screenh * 0.05f);
 
         title = new BaseUIElement("title", menuTitleSprite, menuTitlePos.x, menuTitlePos.y);
-        play = new BaseUIElement("play", buttonPlaySprite, buttonPlayPos.x, buttonPlayPos.y);
+        selectGame = new BaseUIElement("select_game", buttonSelectGameSprite, buttonPlayPos.x, buttonPlayPos.y);
         options = new BaseUIElement("options", buttonOptionsSprite, buttonOptionsPos.x, buttonOptionsPos.y);
         exit = new BaseUIElement("exit", buttonExitSprite, buttonExitPos.x, buttonExitPos.y);
 
         manager.add(title);
-        manager.add(play);
+        manager.add(selectGame);
         manager.add(options);
         manager.add(exit);
     }
@@ -91,9 +91,9 @@ public class MenuMain extends BaseFrame {
         String hit = manager.firstHit(pos.x, pos.y);
         if (hit != null) {
             Gdx.app.log("Log", hit);
-            if (hit == "play")
-                next = new FlashNumbers();
-            else if (hit == "exit")
+            if (hit == selectGame.getName())
+                next = new SelectGame();
+            else if (hit == exit.getName())
                 Gdx.app.exit();
         }
         return true;
@@ -103,7 +103,7 @@ public class MenuMain extends BaseFrame {
     public void dispose() {
         batch.dispose();
         menuTitleSprite.getTexture().dispose();
-        buttonPlaySprite.getTexture().dispose();
+        buttonSelectGameSprite.getTexture().dispose();
         buttonOptionsSprite.getTexture().dispose();
         buttonExitSprite.getTexture().dispose();
     }

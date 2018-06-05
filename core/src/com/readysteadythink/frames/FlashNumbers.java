@@ -45,7 +45,7 @@ public class FlashNumbers extends BaseFrame {
     private Sprite X = new Sprite(new Texture("FlashNumbers/X.png"));
     private boolean blink = false;
     private float blinkEnd = waitDuration / 2.5f;
-    private float blinkInterval = blinkEnd / 4.f;
+    private float blinkInterval = blinkEnd / 5.f;
 
     //Text
     private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Shared/Fonts/Cabin-Bold.ttf"));
@@ -74,13 +74,14 @@ public class FlashNumbers extends BaseFrame {
     public FlashNumbers() {
         X.setScale(squareSize / X.getWidth());
         O.setScale((screenw / O.getWidth()) * 0.75f);
+        square.setColor(Color.BLACK);
 
         parameter.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!'()>?:, ";
 
         parameter.size = (int)(screenw / 8);
         fontLarge = generator.generateFont(parameter);
         fontLarge.setColor(Color.BLACK);
-        layout.setText(fontLarge, title);
+        layout = new GlyphLayout(fontLarge, title);
         titlePos = new Vector2(
                 screenw / 2 - layout.width / 2,
                 screenh - layout.height - screenh * 0.05f);
@@ -97,28 +98,23 @@ public class FlashNumbers extends BaseFrame {
         fontTiny = generator.generateFont(parameter);
         fontTiny.setColor(Color.BLACK);
 
-        min = new Vector2(titlePos.x, screenh * 0.1f);
+        min = new Vector2(screenw * 0.1f, screenh * 0.15f);
         max = new Vector2(
-                titlePos.x + layout.width - squareSize,
-                titlePos.y - layout.height - squareSize - screenh * 0.1f);
+                screenw * 0.9f - squareSize,
+                titlePos.y - layout.height - squareSize - screenh * 0.15f);
         spaceWidth = new Vector2(
                 (max.x - min.x - squareSize * (MAX_SQUARE_PER_LINE - 1)) / (MAX_SQUARE_PER_LINE - 1),
                 (max.y - min.y - squareSize * (MAX_SQUARE_PER_COLUMN - 1)) / (MAX_SQUARE_PER_COLUMN - 1));
 
-        InitSquares();
+        initSquares();
     }
 
     @Override
     public void init() {
         super.init();
-        Global.setFade("out", 3.f);
-        Gdx.app.log("Debug", "Initializing fade out");
     }
 
     public IFrame update(float dt) {
-        if (Global.isFading())
-            Global.fade(dt);
-
         if (wait) {
             long timeSinceWait = TimeUtils.timeSinceMillis(startWait);
 
@@ -153,7 +149,7 @@ public class FlashNumbers extends BaseFrame {
                 if (nbTrue == squareFlipped.size()) {
                     win = true;
                     success.play();
-                    InitWait();
+                    initWait();
                     break;
                 }
                 if (previous && !squareFlipped.get(i)) {
@@ -162,7 +158,7 @@ public class FlashNumbers extends BaseFrame {
                             squarePos.get(lastClicked).x - (X.getWidth() * X.getScaleX()) / 1.25f,
                             squarePos.get(lastClicked).y - (X.getHeight() * X.getScaleY()) / 1.25f);
                     fail.play();
-                    InitWait();
+                    initWait();
                     break;
                 }
                 previous = squareFlipped.get(i);
@@ -180,12 +176,11 @@ public class FlashNumbers extends BaseFrame {
 
         for (int i = 0; i < squareIndexes.size(); i++) {
             if (squareFlipped.get(i)) {
+                Gdx.gl.glLineWidth(borderWidth);
                 square.begin(ShapeType.Line);
-                Gdx.gl20.glLineWidth(borderWidth);
             } else {
                 square.begin(ShapeType.Filled);
             }
-            square.setColor(Color.BLACK);
             square.rect(squarePos.get(i).x, squarePos.get(i).y, squareSize, squareSize);
             square.end();
         }
@@ -257,17 +252,17 @@ public class FlashNumbers extends BaseFrame {
         squareIndexes.clear();
         squarePos.clear();
         squareFlipped.clear();
-        InitSquares();
+        initSquares();
     }
 
-    public void InitWait() {
+    public void initWait() {
         flipAll(true);
         blink = false;
         wait = true;
         startWait = TimeUtils.millis();
     }
 
-    public void InitSquares() {
+    public void initSquares() {
         Random rand = new Random();
         List<Vector2> takenCases = new ArrayList<Vector2>();
 

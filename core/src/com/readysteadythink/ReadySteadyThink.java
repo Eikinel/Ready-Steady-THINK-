@@ -24,6 +24,8 @@ public class ReadySteadyThink extends ApplicationAdapter implements InputProcess
 	public void render () {
 		if (currentFrame != null) {
 			IFrame nextFrame = currentFrame.update(Gdx.graphics.getDeltaTime());
+			if (Global.isFading())
+				Global.fade(Gdx.graphics.getDeltaTime());
 			if (nextFrame == currentFrame) {
 				currentFrame.draw();
 			} else {
