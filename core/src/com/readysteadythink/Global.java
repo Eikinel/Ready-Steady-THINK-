@@ -13,6 +13,7 @@ public final class Global {
     public static String FLASH_NUMBERS = "flash_numbers";
     public static String QUICK_MATH = "quick_math";
     public static String IN_AND_OUT = "in_and_out";
+    public static String TO_MENU = "to_menu";
 
     public static void changeMusic(Music newMusic) {
         if (music != null) {

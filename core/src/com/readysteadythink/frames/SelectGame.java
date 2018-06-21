@@ -28,6 +28,7 @@ public class SelectGame extends BaseFrame {
     //UI Elements
     private UIElementManager manager = new UIElementManager();
     private IUIElement flashNumbers;
+    private IUIElement quickMaths;
     private IUIElement play;
     private float space = screenh * 0.025f;
     private float lineThickness = screenw * 0.01f;
@@ -44,6 +45,7 @@ public class SelectGame extends BaseFrame {
 
     //Sprite
     private Sprite buttonFlashNumbersSprite = new Sprite(new Texture("Menu/flash_numbers.png"));
+    private Sprite buttonQuickMathsSprite = new Sprite(new Texture("Menu/quick_maths.png"));
     private Sprite buttonPlaySprite = new Sprite(new Texture("Menu/play.png"));
 
     //Selection
@@ -66,6 +68,7 @@ public class SelectGame extends BaseFrame {
                 titlePos1.y - layout.height - screenh * 0.05f);
 
         buttonFlashNumbersSprite.setScale((screenw / buttonFlashNumbersSprite.getWidth()) * 0.75f);
+        buttonQuickMathsSprite.setScale((screenw / buttonQuickMathsSprite.getWidth()) * 0.75f);
         buttonPlaySprite.setScale((screenw / buttonPlaySprite.getWidth()) * 0.75f);
 
         Vector2 firstElementPos = new Vector2(
@@ -73,11 +76,13 @@ public class SelectGame extends BaseFrame {
                 titlePos2.y - layout.height - buttonFlashNumbersSprite.getHeight() * buttonFlashNumbersSprite.getScaleY() - screenh * 0.1f);
 
         flashNumbers = new BaseUIElement(Global.FLASH_NUMBERS, buttonFlashNumbersSprite, firstElementPos.x, firstElementPos.y);
-        play = new BaseUIElement("play", buttonPlaySprite, firstElementPos.x, firstElementPos.y - (buttonPlaySprite.getHeight() * buttonPlaySprite.getScaleY()) - space);
+        quickMaths = new BaseUIElement(Global.QUICK_MATH, buttonQuickMathsSprite, firstElementPos.x, firstElementPos.y - (buttonQuickMathsSprite.getHeight() * buttonQuickMathsSprite.getScaleY()) - space);
+        play = new BaseUIElement("play", buttonPlaySprite, firstElementPos.x, firstElementPos.y - (buttonPlaySprite.getHeight() * buttonPlaySprite.getScaleY()) * 2 - space * 2);
 
         selector.setColor(Color.GREEN);
 
         manager.add(flashNumbers);
+        manager.add(quickMaths);
         manager.add(play);
     }
 
@@ -119,8 +124,10 @@ public class SelectGame extends BaseFrame {
         String hit = manager.firstHit(pos.x, pos.y);
         if (hit != null) {
             Gdx.app.log("Log", hit);
-            if (hit == play.getName())
-                next = new Countdown(selection.getName());
+            if (hit == play.getName()) {
+                if (selection != null)
+                    next = new Countdown(selection.getName());
+            }
             else if (manager.getElementByName(hit) == selection)
                 selection = null;
             else

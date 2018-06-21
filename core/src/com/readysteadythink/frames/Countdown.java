@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.readysteadythink.Global;
 
 /**
@@ -39,13 +37,8 @@ public class Countdown extends BaseFrame {
     }
 
     public Countdown(String frameName, float duration) {
-        nextName = frameName;
+        this(frameName);
         delay = duration;
-
-        parameter.characters = "0123456789";
-        parameter.size = textSize;
-        fontLarge = generator.generateFont(parameter);
-        fontLarge.setColor(Color.BLACK);
     }
 
     @Override
@@ -63,6 +56,8 @@ public class Countdown extends BaseFrame {
         if (timeSinceStart >= delay) {
             if (nextName == Global.FLASH_NUMBERS)
                 next = new FlashNumbers();
+            else if (nextName == Global.QUICK_MATH)
+                next = new QuickMaths();
         }
 
         if (next != null) return next;

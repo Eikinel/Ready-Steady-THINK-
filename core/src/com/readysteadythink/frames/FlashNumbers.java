@@ -5,17 +5,18 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.readysteadythink.Global;
+import com.readysteadythink.ui.BaseUIElement;
+import com.readysteadythink.ui.IUIElement;
+import com.readysteadythink.ui.TextUtils;
+import com.readysteadythink.ui.UIElementManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,12 @@ import java.util.ListIterator;
 import java.util.Random;
 
 public class FlashNumbers extends BaseFrame {
+
+    private IFrame next = null;
+
+    //UI Elements
+    private UIElementManager manager = new UIElementManager();
+    private IUIElement toMenu;
 
     //Game variables
     private long gameClock = TimeUtils.millis();
@@ -43,19 +50,16 @@ public class FlashNumbers extends BaseFrame {
     //Sprites
     private Sprite O = new Sprite(new Texture("FlashNumbers/O.png"));
     private Sprite X = new Sprite(new Texture("FlashNumbers/X.png"));
+    private Sprite buttonToMenu = new Sprite(new Texture("Shared/to_menu.png"));
     private boolean blink = false;
     private float blinkEnd = waitDuration / 2.5f;
     private float blinkInterval = blinkEnd / 5.f;
 
     //Text
-    private FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("Shared/Fonts/Cabin-Bold.ttf"));
-    private FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-    private BitmapFont fontLarge;
-    private BitmapFont fontSmall;
-    private BitmapFont fontTiny;
-    private GlyphLayout layout = new GlyphLayout();
     private String title = "Flash Numbers";
     private Vector2 titlePos;
+    private GlyphLayout layout;
+    TextUtils textUtils = new TextUtils();
 
     //Shapes
     private ShapeRenderer square = new ShapeRenderer();
@@ -74,14 +78,10 @@ public class FlashNumbers extends BaseFrame {
     public FlashNumbers() {
         X.setScale(squareSize / X.getWidth());
         O.setScale((screenw / O.getWidth()) * 0.75f);
+        buttonToMenu.setScale((screenw / buttonToMenu.getWidth()) * 0.1f);
         square.setColor(Color.BLACK);
 
-        parameter.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!'()>?:, ";
-
-        parameter.size = (int)(screenw / 8);
-        fontLarge = generator.generateFont(parameter);
-        fontLarge.setColor(Color.BLACK);
-        layout = new GlyphLayout(fontLarge, title);
+        layout = new GlyphLayout(textUtils.getFontLarge(), title);
         titlePos = new Vector2(
                 screenw / 2 - layout.width / 2,
                 screenh - layout.height - screenh * 0.05f);
@@ -90,14 +90,6 @@ public class FlashNumbers extends BaseFrame {
                 screenh / 2.f - O.getHeight() / 2.f - (screenh - titlePos.y) / 2.f
         );
 
-        parameter.size = (int)(screenw / 12);
-        fontSmall = generator.generateFont(parameter);
-        fontSmall.setColor(Color.BLACK);
-
-        parameter.size = (int)(screenw / 24);
-        fontTiny = generator.generateFont(parameter);
-        fontTiny.setColor(Color.BLACK);
-
         min = new Vector2(screenw * 0.1f, screenh * 0.15f);
         max = new Vector2(
                 screenw * 0.9f - squareSize,
@@ -105,6 +97,11 @@ public class FlashNumbers extends BaseFrame {
         spaceWidth = new Vector2(
                 (max.x - min.x - squareSize * (MAX_SQUARE_PER_LINE - 1)) / (MAX_SQUARE_PER_LINE - 1),
                 (max.y - min.y - squareSize * (MAX_SQUARE_PER_COLUMN - 1)) / (MAX_SQUARE_PER_COLUMN - 1));
+
+        toMenu = new BaseUIElement(Global.TO_MENU, buttonToMenu,
+                screenw - (buttonToMenu.getWidth() * buttonToMenu.getScaleX()) - screenw * 0.02f,
+                screenh - (buttonToMenu.getHeight() * buttonToMenu.getScaleY()) - screenh * 0.01f);
+        manager.add(toMenu);
 
         initSquares();
     }
@@ -115,6 +112,8 @@ public class FlashNumbers extends BaseFrame {
     }
 
     public IFrame update(float dt) {
+        if (next != null) return next;
+
         if (wait) {
             long timeSinceWait = TimeUtils.timeSinceMillis(startWait);
 
@@ -187,13 +186,14 @@ public class FlashNumbers extends BaseFrame {
 
         long timeElapsedSecond = TimeUtils.timeSinceMillis(gameClock) / 1000;
         batch.begin();
-        fontLarge.draw(batch, title, titlePos.x, titlePos.y);
-        fontTiny.draw(batch,
+        manager.draw(batch, viewport);
+        textUtils.getFontLarge().draw(batch, title, titlePos.x, titlePos.y);
+        textUtils.getFontTiny().draw(batch,
                 "Timer: " + Long.toString(timeElapsedSecond) + " second" + (timeElapsedSecond >= 2 ? "s" : ""),
                 screenw * 0.02f, screenh * 0.98f);
         for (int i = 0; i < squareIndexes.size(); i++) {
-            layout.setText(fontSmall, Integer.toString(squareIndexes.get(i)));
-            fontSmall.draw(batch, Integer.toString(squareIndexes.get(i)),
+            layout.setText(textUtils.getFontSmall(), Integer.toString(squareIndexes.get(i)));
+            textUtils.getFontSmall().draw(batch, Integer.toString(squareIndexes.get(i)),
                     squarePos.get(i).x + squareSize / 2 - layout.width / 2,
                     squarePos.get(i).y + squareSize - layout.height / 2);
         }
@@ -210,8 +210,15 @@ public class FlashNumbers extends BaseFrame {
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (!flash && !wait) {
             Vector3 camPos = camera.unproject(new Vector3(screenX, screenY, 0));
+            String hit = manager.firstHit(camPos.x, camPos.y);
             ListIterator<Vector2> it = squarePos.listIterator();
             int i = 0;
+
+            if (hit != null) {
+                Gdx.app.log("Log", hit);
+                if (hit == toMenu.getName())
+                    next = new MenuMain();
+            }
 
             while (it.hasNext()) {
                 Vector2 pos = it.next();
@@ -233,10 +240,7 @@ public class FlashNumbers extends BaseFrame {
 
     @Override
     public void dispose() {
-        generator.dispose();
-        fontLarge.dispose();
-        fontSmall.dispose();
-        fontTiny.dispose();
+        textUtils.dispose();
         square.dispose();
         O.getTexture().dispose();
         X.getTexture().dispose();
